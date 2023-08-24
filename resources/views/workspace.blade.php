@@ -19,7 +19,7 @@
     </style>
 
 
-    <div class="bs-toast toast fade show bg-dark" role="alert" aria-live="assertive" aria-atomic="true"
+    {{-- <div class="bs-toast toast fade show bg-dark" role="alert" aria-live="assertive" aria-atomic="true"
         style="position: absolute;top:5%;right:5%">
         <div class="toast-header">
             <div class="me-auto fw-medium">Alert!</div>
@@ -28,7 +28,7 @@
         <div class="toast-body">
             The Draggable and Move function is currently unavailable, I am still figuring it out
         </div>
-    </div>
+    </div> --}}
 
 
 
@@ -124,7 +124,7 @@
                                             ondrop="drop(event)" ondragover="allowDrop(event)"
                                             ondragleave="clearDrop(event)"> &nbsp; </div>
 
-                                        <div class="card bg-dark text-white draggable shadow-sm p-1"
+                                        <div class="card bg-dark text-white draggable shadow-sm p-1 mb-1"
                                             id="task-{{ $task->id }}" draggable="true" ondragstart="drag(event)">
                                             <div class="card-header d-flex justify-content-between pb-2">
                                                 <div>
@@ -259,12 +259,6 @@
     @endforeach
 
 
-    <form id="taskMovementForm" action="{{ route('move-task') }}" method="POST" style="display: none;">
-        @csrf
-        <input type="hidden" name="task_id" id="task_id_input">
-        <input type="hidden" name="new_task_list_id" id="new_task_list_id_input">
-    </form>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const showTaskListFormButton = document.getElementById('showTaskListForm');
@@ -275,6 +269,7 @@
             });
         });
     </script>
+
 
     <script>
         const drag = (event) => {
@@ -295,68 +290,31 @@
         const drop = (event) => {
             event.preventDefault();
             const data = event.dataTransfer.getData("text/plain");
-            const element = document.querySelector(`#task-${data}`);
+            const element = document.querySelector(`#${data}`);
             const newTaskListId = event.target.getAttribute("data-task-list-id"); // Retrieve the new task list ID
+
 
             const taskIdNumber = data.split("-")[1];
 
-            // Populate the hidden form fields
-            document.querySelector('#task_id_input').value = taskIdNumber;
-            document.querySelector('#new_task_list_id_input').value = newTaskListId;
-
-            // Submit the hidden form
-            document.querySelector('#taskMovementForm').submit();
-
             // Send an AJAX request to move the task
-            // $.ajax({
-            //     url: "{{ route('move-task') }}", // Use the route name you defined in web.php
-            //     method: "POST",
-            //     data: {
-            //         task_id: taskIdNumber,
-            //         new_task_list_id: newTaskListId,
-            //         _token: "{{ csrf_token() }}", // Don't forget the CSRF token
-            //     },
-            //     success: function(response) {
-            //         console.log("Nice")
-            //         // Handle the success response
-            //     },
-            //     error: function(error) {
-            //         // Handle the error response
-            //     }
-            // });
-            updateDropzones();
+            $.ajax({
+                url: "{{ route('task.drop') }}", // Use the route name you defined in web.php
+                method: "POST",
+                data: {
+                    task_id: taskIdNumber,
+                    new_task_list_id: newTaskListId,
+                    _token: "{{ csrf_token() }}", // Don't forget the CSRF token
+                },
+                success: function(response) {
+                    // Handle the success response
+                    location.reload();
+                },
+                error: function(error) {
+                    // Handle the error response
+                }
+            });
 
-            // try {
-            //     // remove the spacer content from dropzone
-            //     event.target.removeChild(event.target.firstChild);
-            //     // add the draggable content
-            //     event.target.appendChild(element);
-            //     // remove the dropzone parent
-            //     unwrap(event.target);
-            // } catch (error) {
-            //     console.warn("can't move the item to the same place")
-            // }
-            // updateDropzones();
         }
-
-        const updateDropzones = () => {
-            /* after dropping, refresh the drop target areas
-              so there is a dropzone after each item
-              using jQuery here for simplicity */
-
-            var dz = $(
-                '<div class="dropzone rounded" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="clearDrop(event)"> &nbsp; </div>'
-            );
-
-            // delete old dropzones
-            $('.dropzone').remove();
-
-            // insert new dropdzone after each item   
-            dz.insertAfter('.card.draggable');
-
-            // insert new dropzone in any empty swimlanes
-            $(".items:not(:has(.card.draggable))").append(dz);
-        };
 
         // helpers
         function hasClass(target, className) {
@@ -378,6 +336,7 @@
             node.replaceWith(...node.childNodes);
         }
     </script>
+
 
 
 

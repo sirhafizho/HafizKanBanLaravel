@@ -54,7 +54,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('tasklists/{taskList}/tasks/{task}', [TaskController::class, 'destroy'])
         ->name('task.destroy');
 
-    Route::post('/move-task', [TaskController::class, 'moveTask'])->name('move-task');
+    Route::post('/move-task/{task}', [TaskController::class, 'moveTask'])->name('task.move');
+    Route::post('/move-task-drop', [TaskController::class, 'moveTaskDrop'])->name('task.drop');
 });
 
 

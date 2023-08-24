@@ -6,12 +6,11 @@ use App\Http\Requests\MoveRequest;
 use App\Models\Task;
 use App\Models\TaskList;
 use App\Http\Requests\TaskRequest;
-use App\Models\Workspace;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function store(TaskRequest $request, Workspace $workspace, TaskList $taskList)
+    public function store(TaskRequest $request, TaskList $taskList)
     {
 
         $validatedData = $request->validated();
@@ -73,14 +72,59 @@ class TaskController extends Controller
         }
     }
 
-    public function moveTask(MoveRequest $request,Task $task)
+    public function moveTask(MoveRequest $request, Task $task)
     {
         $validatedData = $request->validated();
         $newTaskListId = $validatedData['task_list_id'];
 
-        // Update the task's task list and save
-        $task->task_list_id = $newTaskListId;
-        $task->save();
+        // Retrieve the original task attributes
+        $originalAttributes = $task->toArray();
+
+        // Create a new task in the target task list
+        $newTask = new Task();
+        $newTask->fill($originalAttributes);
+        $newTaskList = TaskList::findOrFail($newTaskListId);
+
+        $lastTask = $newTaskList->tasks->last();
+        $newTask->order = $lastTask ? $lastTask->order + 1 : 1; // Set the order
+
+        $newTaskArray = $newTask->toArray();
+        unset($newTaskArray['task_list_id']);
+        $newTaskList->tasks()->create($newTaskArray);
+
+        // $newTask->save();
+
+        // Delete the original task
+        $task->delete();
+
+        return redirect()->route('workspace.show', $newTaskList->workspace)
+            ->with('success', 'Task moved successfully.');
+        // return response()->json(['message' => 'Task moved successfully']);
+    }
+
+    public function moveTaskDrop(Request $request)
+    {
+        $task_id = $request->input('task_id');
+        $new_task_list_id = $request->input('new_task_list_id');
+
+
+        $task = Task::findOrFail($task_id);
+        $newTaskList = TaskList::findOrFail($new_task_list_id);
+
+        $originalAttributes = $task->toArray();
+
+        $newTask = new Task();
+        $newTask->fill($originalAttributes);
+
+        $lastTask = $newTaskList->tasks->last();
+        $newTask->order = $lastTask ? $lastTask->order + 1 : 1; // Set the order
+
+        $newTaskArray = $newTask->toArray();
+        unset($newTaskArray['task_list_id']);
+
+        $newTaskList->tasks()->create($newTaskArray);
+
+        $task->delete();
 
         return response()->json(['message' => 'Task moved successfully']);
     }

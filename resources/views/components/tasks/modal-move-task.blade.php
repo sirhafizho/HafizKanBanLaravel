@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('move-task', ['task' => $task]) }}">
+<form method="POST" action="{{ route('task.move', ['task' => $task]) }}">
     @csrf
     <div class="modal fade" id="moveTask{{ $task->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -14,7 +14,9 @@
                             <label for="newTaskId" class="form-label text-white">Move Task to:</label>
                             <select required id="newTaskId" name="task_list_id" class="form-select bg-dark text-white">
                                 @foreach ($taskLists as $taskList)
-                                    <option value="{{ $taskList->id }}">{{ $taskList->title }}</option>
+                                    @if ($task->task_list_id != $taskList->id)
+                                        <option value="{{ $taskList->id }}">{{ $taskList->title }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>
